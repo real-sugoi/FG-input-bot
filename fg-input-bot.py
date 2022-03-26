@@ -36,13 +36,11 @@ async def on_message(message):
         return
     scraper = infilScraper()
     if '!glossary' in message.content:
-        key_words, search_words = scraper.key_words_search_words(message.content)
-        result_text = scraper.search(key_words)
-
-
-    if len(result_text) > 0:
-        await message.channel.send(result_text)
-    else:
-        await message.channel.send("no results found :(")
+        key_words = scraper.key_words_search_words(message.content)
+        results = scraper.search(key_words)
+        if results:
+            await message.channel.send(result_text)
+        else:
+            await message.channel.send("no results found :(")
 
 client.run(TOKEN)
