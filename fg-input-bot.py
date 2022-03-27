@@ -5,8 +5,12 @@
 import os
 from unicodedata import name
 import discord
-import json
-import re
+import json # read glossary in
+import re # cleaning text ewwww
+
+# web scraping
+import requests
+from bs4 import BeautifulSoup
 
 from dotenv import load_dotenv
 from discord.ext import commands
@@ -27,6 +31,7 @@ bot =  commands.Bot(command_prefix='!')
 # Open and store json file data
 
 with open("glossary.json", encoding='utf-8') as jsonFile:
+
     glossary = json.load(jsonFile)
     jsonFile.close()
 
@@ -42,15 +47,29 @@ async def on_ready():
             f'{guild.name}(id: {guild.id})'
         )
         
-# All glossary items obtained from https://glossary.infil.net/json/glossary.json once a day
+# All glossary items obtained from https://glossary.infil.net/json/glossary.json
+# TODO: implement once a day/month update on glossary. 
 # might move this to it's own .py cuz it's getting kinda large :sweat:
 
+def clean_text(text):
+    #text = text.replace("'>", "__**")
+    text = re.sub(r"(!<')([a-zA-Z0-9\/\ \.\-]+)'>", r"**__\2__**", text)
+    text = re.sub("(!<')([a-zA-Z0-9\/\ \.\-]+)','([a-zA-Z0-9\/\ \.\-]+)'>", r" \3 (**__\2__**)", text)
+    print(text)
+    text = text.replace("'>", "__**")
+    text = re.sub("(?:<br>|</br>)", "\n", text)
+    text = re.sub("(?:<[^\s]+>)", "", text)
+    return text 
+
+def clean_feet(text):
+    text = re.sub(r"(!<')([a-zA-Z0-9\/\ \.\-]+)'>", r"\2}", text)
+    text = re.sub("(!<')([a-zA-Z0-9\/\ \.\-]+)','([a-zA-Z0-9\/\ \.\-]+)'>", r"\3 (\2)", text)
+    return text
 @client.event
 async def on_message(message):
     if message.author == client.user:
         return
     if '!glossary' in message.content:
-        # key_words = scraper.key_words_search_words(message.content)
         search_words = message.content[10::]
 
         if scrape_mode:
@@ -89,47 +108,32 @@ async def on_message(message):
                     print(hasGameSpecific)
                 #TODO: make this readable
                 
-                embed_kwargs = {}
-
-                
-
                 # replace embedded with underline to indicate more terms
-                #result_text = ""
-                #result_text += (term["term"] + "\n")
+                embed = discord.Embed(title=term["term"], color=0x00ff00)
+
                 if(hasImage):
-                    embed = discord.Embed(title=term["term"], color=0x00ff00)
                     embed.set_image(url=("https://glossary.infil.net/images/terms/" + term["term"].replace(" ", "%20") + "." + term["image"][0]))
-                    embed.set_footer(text=term["image"][1])
-                    #result_text += ("https://glossary.infil.net/images/terms/" + term["term"].replace(" ", "%20") + "." + term["image"][0])
-                    #footer_text = term["image"][1]         
+                    embed.set_footer(text=clean_feet(term["image"][1]))
                 elif(hasVideo):
-                   # embed = discord.Embed(
-                   #     title=embed.title, 
-                   #     fields={
-                   #         for field in embed.fields:
-                   #             name=field.name
-                   #             }
-                   #          )
-                    embed = discord.Embed(title=term["term"], video=("https://gfycat.com/" + term["video"][0]), color=0x00ff00)
-                    embed.add_field(name="video link:", value=("https://gfycat.com/" + term["video"][0]))
-                    #embed.set_image(url=("https://gfycat.com/" + term["video"][0]))
-                    embed.set_footer(text=term["video"][1])
-                    #result_text += ("https://gfycat.com/" + term["video"][0])
-                    #footer_text = term["video"][1]
-                else:
-                    embed = discord.Embed(title=term["term"], color=0x00ff00)
+                    # get the gif version cuz video embed doesn't work :(
+                    # this gif looks really bad thouuuuuughhhh T_T
+                    link = requests.get("https://gfycat.com/" + term["video"][0])
+                    soup = BeautifulSoup(link.content, 'html.parser')
+                    soup = soup.find(property="og:image")
+                    video = soup.get('content')
+
+                    embed.set_image(url=(video))
+                    embed.set_footer(text=clean_feet(term["video"][1]))
+
                 if(hasAlt):
                     embed.add_field(name="Alternate Name(s): ", value=", ".join(str(alt) for alt in term["altterm"]))
-                    #result_text += ", ".join(str(alt) for alt in term["altterm"]) + "\n"
+
                 if(hasJP):
-                    embed.add_field(name="JP name(s): ", value=term["jp"])
-                    #result_text += (term["jp"] + "\n")
-                #result_text += ("\n" + term["def"] + "\n")
-                embed.description = term["def"]
+                    embed.add_field(name="JP name(s): ", value=clean_text(term["jp"].replace("Lit.", "\n")))
+                embed.description = clean_text(term["def"])
+
                 if(hasGameSpecific):
                     embed.add_field(name="Specific to: ", value=", ".join(str(alt) for alt in term["games"]))
-                    #result_text += ("This game is specific to: \n")
-                    #result_text += ", ".join(str(game) for game in term["games"]) + "\n"
 
                 # send the embedded message
                 await message.channel.send(embed=embed)
