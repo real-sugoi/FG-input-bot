@@ -78,6 +78,7 @@ def clean_text(text):
 def clean_feet(text):
     text = re.sub(r"(!<')([a-zA-Z0-9\/\ \.\-]+)'>", r"\2}", text)
     text = re.sub("(!<')([a-zA-Z0-9\/\ \.\-]+)','([a-zA-Z0-9\/\ \.\-]+)'>", r"\3 (\2)", text)
+    text = re.sub('(?:<a href="([^\s]+)">([^.]+)</a>)', r"\2 (\1)", text)
     return text
 
 
@@ -88,7 +89,7 @@ async def on_message(message):
     
     # glossary index
     # reference from https://stackoverflow.com/questions/61787520/i-want-to-make-a-multi-page-help-command-using-discord-py
-    if "!gindex" in message.content.lower().replace(" ", "") or "!glossaryindex" in message.content.lower().replace(" ", ""):
+    if "!gindex" in message.content.lower() or "!glossaryindex" in message.content.lower():
         pages = len(g_index_pages)
         if '!glossaryindex' in message.content.lower().replace(" ", ""):
             msg_int = int("".join([str(page_num) for page_num in message.content[14::] if page_num.isdigit()]))
@@ -143,9 +144,9 @@ async def on_message(message):
 
     if '!g' in message.content or "!glossary" in message.content:
         if '!glossary' in message.content:
-            search_words = message.content.lower().replace(" ", "")[9::]
+            search_words = message.content.lower()[10::]
         else: 
-            search_words = message.content.lower().replace(" ", "")[2::]
+            search_words = message.content.lower()[3::]
         
         if scrape_mode:
             # non-functional atm
