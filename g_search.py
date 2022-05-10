@@ -11,6 +11,11 @@ from bs4 import BeautifulSoup
 from dotenv import load_dotenv
 from discord.ext import commands
 
+import mp4_to_gif
+
+
+# Current web address, used for url linking
+web_url = "https://d1gdthni3pbnmg.cloudfront.net/"
 
 def clean_text(text):
     #text = text.replace("'>", "__**")
@@ -62,9 +67,10 @@ async def g_search(message, glossary, debug):
         hasGameSpecific = "games" in term
 
         if debug:   
+            print(term["term"])
             print(message.content)
             print(search_words)
-            print("type: ", type(term))
+            print("type: ", type(str(term["term"][0])))
             print(hasAlt)
             print(hasVideo)
             print(hasImage)
@@ -82,9 +88,11 @@ async def g_search(message, glossary, debug):
             # this gif looks really bad thouuuuuughhhh T_T
             link = requests.get("https://gfycat.com/" + term["video"][0])
             soup = BeautifulSoup(link.content, 'html.parser')
-            soup = soup.find(property="og:image")
+            soup = soup.find(property="og:video")
             video = soup.get('content')
-            embed.set_image(url=(video))
+
+            mp4_to_gif.MP4_to_GIF(video, str(term["term"]).replace(" ", "%20"))
+            embed.set_image(url=web_url+str(term["term"]).replace(" ", "%2520")+".gif")
             footer = clean_feet(term["video"][1])
 
         if(hasAlt):

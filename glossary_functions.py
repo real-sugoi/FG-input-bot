@@ -1,6 +1,9 @@
 import discord
 import asyncio
 
+# glossary index
+# reference from https://stackoverflow.com/questions/61787520/i-want-to-make-a-multi-page-help-command-using-discord-py
+
 async def glossary_index(message, g_index_pages, client):
     pages = len(g_index_pages)
     if '!glossaryindex' in message.content.lower().replace(" ", "") and len(message.content.lower().replace(" ", "")) > 14:

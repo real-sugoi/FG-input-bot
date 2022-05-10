@@ -19,6 +19,7 @@ from discord.ext import commands
 import glossary_functions
 import g_search
 
+
 scrape_mode = False
 debug = True
 if scrape_mode:

@@ -1,0 +1,1 @@
+worker: python fg-input-bot.py
