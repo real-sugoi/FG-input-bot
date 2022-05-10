@@ -13,6 +13,10 @@ from discord.ext import commands
 
 import mp4_to_gif
 
+
+# Current web address, used for url linking
+web_url = "https://d1gdthni3pbnmg.cloudfront.net/"
+
 def clean_text(text):
     #text = text.replace("'>", "__**")
     text = re.sub(r"(!<')([a-zA-Z0-9\/\ \.\-]+)'>", r"**__\2__**", text)
@@ -63,10 +67,10 @@ async def g_search(message, glossary, debug):
         hasGameSpecific = "games" in term
 
         if debug:   
-            print(term)
+            print(term["term"])
             print(message.content)
             print(search_words)
-            print("type: ", type(term))
+            print("type: ", type(str(term["term"][0])))
             print(hasAlt)
             print(hasVideo)
             print(hasImage)
@@ -87,8 +91,8 @@ async def g_search(message, glossary, debug):
             soup = soup.find(property="og:video")
             video = soup.get('content')
 
-            mp4_to_gif.MP4_to_GIF(video, str(term["term"]))
-            embed.set_image(url="Gifs/"+str(term["term"])+".gif")
+            mp4_to_gif.MP4_to_GIF(video, str(term["term"]).replace(" ", "%20"))
+            embed.set_image(url=web_url+str(term["term"]).replace(" ", "%2520")+".gif")
             footer = clean_feet(term["video"][1])
 
         if(hasAlt):
